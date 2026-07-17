@@ -5,5 +5,10 @@ node_modules
 /public/build
 /.mf
 .env
+.env.*
+!.env.example
 .shopify
 .react-router
+tsconfig.tsbuildinfo
+.DS_Store
+*.log

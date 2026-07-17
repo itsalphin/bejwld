@@ -1,0 +1,683 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   bejwld — brand token system
+   The single place the design language lives. Colours are the exact tokens
+   from the brand brief (§1). Both themes are token overrides: components only
+   ever reference the semantic variables, so switching theme swaps values, not
+   markup. `--alabaster` is always "the ground", `--sable` is always "the ink".
+   ========================================================================== */
+
+:root {
+  /* Light — the house default */
+  --alabaster: #fbf9f4; /* primary ground */
+  --bone: #eae1d0; /* surfaces */
+  --sable: #26221e; /* ink — never pure black */
+  --stone: #cbbfa8; /* hairlines */
+  --champagne: #b8975a; /* the metal — foil, fine rules, detail only */
+  --laurel: #24503f; /* the signature — one whisper per view */
+  --gold-ink: #8a6a2c; /* text-safe deep gold for small labels */
+
+  --measure: 65ch;
+  --header-height: 84px;
+
+  color-scheme: light;
+}
+
+/* Expose the tokens to Tailwind as utilities (bg-alabaster, text-sable,
+   border-stone, font-display …). `inline` keeps the utilities pointing at the
+   live CSS variables so they re-theme at runtime. */
+@theme inline {
+  --color-alabaster: var(--alabaster);
+  --color-bone: var(--bone);
+  --color-sable: var(--sable);
+  --color-stone: var(--stone);
+  --color-champagne: var(--champagne);
+  --color-laurel: var(--laurel);
+  --color-gold-ink: var(--gold-ink);
+
+  --font-display: 'Playfair Display', Didot, 'Bodoni MT', 'Times New Roman', serif;
+  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  --default-transition-duration: 300ms;
+}
+
+/* ==========================================================================
+   Self-hosted display face — Playfair Display (Didone stand-in, no CDN).
+   Body uses a neo-grotesque system stack per the brief.
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/playfair-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/playfair-400-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/playfair-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/playfair-500-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/playfair-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/playfair-600-italic.woff2') format('woff2');
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--alabaster);
+  color: var(--sable);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--bone);
+  color: var(--sable);
+}
+
+/* Base link colour lives in @layer base so Tailwind text-* utilities (which sit
+   in the higher `utilities` layer) win — otherwise this unlayered rule would
+   override e.g. a button's `text-alabaster` and wash the label out. */
+@layer base {
+  a {
+    color: var(--gold-ink);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  a:hover {
+    color: var(--sable);
+  }
+}
+
+/* Display face + tight editorial leading for headings */
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Uppercase micro-label — the house's typographic tell (§1) */
+.label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+.measure {
+  max-width: var(--measure);
+}
+
+/* Visible keyboard focus everywhere (a11y §9) */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--laurel);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--sable);
+  color: var(--alabaster);
+  padding: 12px 20px;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.skip-link:focus {
+  left: 12px;
+  top: 12px;
+  color: var(--alabaster);
+}
+
+/* ==========================================================================
+   Motion — the signature gestures. All guarded by prefers-reduced-motion.
+   ========================================================================== */
+
+@keyframes bjShimmer {
+  0% {
+    background-position: 130% 0;
+  }
+  55%,
+  100% {
+    background-position: -30% 0;
+  }
+}
+@keyframes bjFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Header entrance — the top bar settles down into place as the page loads, so it
+   comes in together with the hero rather than snapping in statically. Fires only
+   on a full page load (the header persists across client navigations). */
+@keyframes bjHeaderIn {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Page transition — a soft fade-and-rise on every route change, re-triggered by
+   keying the wrapper on the pathname (see PageLayout). Disabled under
+   reduced-motion by the block below. */
+@keyframes bjPageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-transition {
+  animation: bjPageEnter 0.5s cubic-bezier(0.2, 0.6, 0.2, 1) both;
+}
+
+/* Full-screen home hero — one stable screen below the sticky 84px header.
+   Defined here (not as a Tailwind JIT arbitrary class) so its rule can never go
+   stale during hot-reload and drop the min-height, which collapsed the hero on
+   client navigation. `svh` keeps it steady as browser chrome shows/hides. */
+.hero-screen {
+  min-height: calc(100svh - 84px);
+}
+
+/* Home logo hover — a laurel line traces itself over the champagne mark (drawn
+   with the same stroke-dash technique as the loader), then retracts on leave. */
+.logo-draw path {
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: var(--len);
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.logo-mark:hover .logo-draw path,
+.logo-mark:focus-visible .logo-draw path {
+  stroke-dashoffset: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-draw path {
+    transition: none;
+  }
+}
+
+/* Wordmark: light drawn slowly across the metal. */
+.wordmark-shimmer {
+  background: linear-gradient(
+    105deg,
+    var(--sable) 38%,
+    var(--champagne) 50%,
+    var(--sable) 62%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: bjShimmer 9s 1.6s ease-in-out infinite;
+}
+
+/* Scroll reveals: set by JS (see useReveal). Start hidden only when JS + motion
+   are available, so no-JS and reduced-motion users see content immediately. */
+[data-reveal] {
+  will-change: opacity, transform;
+}
+
+/* ===========================================================================
+   Full-screen menu — a laurel curtain drops from the top and the options
+   stagger in. The toggle's two lines morph into an X. (Lando-Norris-style.)
+   =========================================================================== */
+
+/* Toggle: two lines that cross into an X. Lines inherit the header text colour
+   via currentColor, so they read sable on alabaster and alabaster when open. */
+.menu-toggle {
+  position: relative;
+  width: 30px;
+  height: 20px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+}
+.menu-toggle span {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  height: 1.5px;
+  background: currentColor;
+  transition:
+    transform 0.45s cubic-bezier(0.65, 0, 0.35, 1),
+    width 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.menu-toggle .l1 {
+  top: 7px;
+}
+.menu-toggle .l2 {
+  top: 12px;
+  width: 60%; /* the shorter, offset lower line at rest */
+  left: auto;
+  right: 3px;
+}
+.menu-toggle[aria-expanded='true'] .l1 {
+  transform: translateY(2.5px) rotate(45deg);
+}
+.menu-toggle[aria-expanded='true'] .l2 {
+  width: calc(100% - 6px);
+  transform: translateY(-2.5px) rotate(-45deg);
+}
+
+/* The overlay sits BELOW the header (z-40 < header z-50) so the wordmark and
+   toggle stay on top and clickable. */
+/* The menu simply cross-fades in — the white page transitions to the green
+   overlay with every option already in place (no slide, no curtain). */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--laurel);
+  color: var(--alabaster);
+  opacity: 0;
+  visibility: hidden;
+  overflow-y: auto;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s linear 0.4s;
+}
+.menu-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s;
+}
+
+/* Options are simply present — they fade in with the overlay, all at once. */
+.menu-link {
+  opacity: 1;
+  transform: none;
+}
+
+/* Menu layout + type in plain CSS (not JIT-generated utilities) so a stale
+   hot-reload can never collapse it. */
+.menu-panel {
+  max-width: 1440px;
+  min-height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 132px clamp(20px, 4vw, 56px) 56px;
+}
+
+/* Upper block — big numbered options on the left, an editorial note on the right. */
+.menu-main {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 44px;
+}
+@media (min-width: 900px) {
+  .menu-main {
+    grid-template-columns: 1.5fr 1fr;
+    align-items: center;
+  }
+}
+.menu-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.menu-primary a {
+  width: fit-content;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(30px, 3vw, 44px);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1.16;
+  color: var(--alabaster);
+  transition:
+    color 0.3s ease,
+    transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+/* Hover motion is the text roll (see .roll) — no extra shift/colour here. */
+
+.menu-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+@media (min-width: 900px) {
+  .menu-aside {
+    align-items: flex-end;
+    text-align: right;
+    padding-left: 48px;
+  }
+}
+.menu-aside .quote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(22px, 2.6vw, 32px);
+  line-height: 1.22;
+  color: var(--alabaster);
+}
+.menu-aside .desc {
+  max-width: 32ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--alabaster) 72%, transparent);
+}
+
+/* Lower block — three quiet columns. */
+.menu-foot {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  border-top: 1px solid color-mix(in srgb, var(--alabaster) 16%, transparent);
+  padding-top: 30px;
+}
+@media (min-width: 700px) {
+  .menu-foot {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+  }
+}
+.menu-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.menu-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--alabaster) 55%, transparent);
+}
+.menu-sub a,
+.menu-contact a {
+  font-size: 15px;
+  color: var(--alabaster);
+}
+.menu-sub--utility a {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+.menu-sub--house a {
+  color: color-mix(in srgb, var(--alabaster) 82%, transparent);
+}
+.menu-contact a {
+  color: var(--champagne);
+}
+/* The champagne roll-in copy would be invisible on a champagne base, so the
+   contact link's roll uses the ground colour for its incoming copy. */
+.menu-contact .roll-char > span::after {
+  color: var(--alabaster);
+}
+
+/* ===========================================================================
+   Text roll — on hover the label rolls up and an identical copy rolls into its
+   place (the incoming copy in champagne). Applied to the menu options.
+   =========================================================================== */
+.roll {
+  display: inline-block;
+  vertical-align: bottom;
+}
+.roll-chars {
+  display: inline-block;
+  white-space: nowrap;
+}
+/* Each letter is its own little clip window; the inner span carries the roll
+   and a per-letter transition-delay (set inline) for the diagonal cascade. */
+.roll-char {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.roll-char > span {
+  display: block;
+  position: relative;
+  transition: transform 0.42s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.roll-char > span::after {
+  content: attr(data-char);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  color: var(--champagne);
+}
+.menu-link:hover .roll-char > span,
+.roll-link:hover .roll-char > span,
+.roll:hover .roll-char > span {
+  transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .wordmark-shimmer {
+    animation: none;
+  }
+  /* Menu options appear immediately (no rise) for reduced-motion users. */
+  .menu-link {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ===========================================================================
+   Page-transition loader — the logo zooms in with a pop over an alabaster
+   ground on every navigation, then fades to reveal the new page.
+   =========================================================================== */
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--alabaster);
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.45s ease,
+    visibility 0s linear 0.45s;
+}
+.page-loader.is-loading {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  /* Snap opaque instantly on show. Mock-data routes swap in almost immediately,
+     so any fade-in would let the new page flash THROUGH the loader before it
+     covers — the loader must cover the current page the moment you click. */
+  transition: none;
+}
+/* The SVG's size comes ONLY from its explicit width/height attributes (50×76)
+   — no CSS width/height, so it can never blow up from a browser auto-sizing a
+   viewBox-only SVG. */
+.page-loader__logo {
+  transform: scale(0.5);
+  opacity: 0;
+}
+.page-loader__logo svg {
+  display: block;
+}
+.page-loader__logo path {
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: var(--len);
+}
+.page-loader__cap {
+  margin-top: 26px;
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--sable);
+  opacity: 0;
+}
+/* On show: the logo pops/zooms in, the strokes draw on, the caption fades up. */
+.page-loader.is-loading .page-loader__logo {
+  animation: bjLoaderPop 0.7s cubic-bezier(0.2, 0.85, 0.3, 1.15) forwards;
+}
+.page-loader.is-loading #ld-p1 {
+  animation: bjLoaderDraw 0.85s ease 0.1s forwards;
+}
+.page-loader.is-loading #ld-p2 {
+  animation: bjLoaderDraw 0.5s ease 0.62s forwards;
+}
+.page-loader.is-loading .page-loader__cap {
+  animation: bjLoaderCap 0.6s ease 0.32s forwards;
+}
+/* ZOOM phase — "reveal through the logo": the screen floods to a champagne
+   field and a B-shaped window (the logo's own silhouette) grows from where the
+   logo sat, revealing the page through it. The loader's ground goes transparent
+   so the window shows the PAGE, not the loader itself. */
+.page-loader.is-zooming {
+  background: transparent;
+  animation: bjLoaderOut 0.75s ease forwards;
+}
+.page-loader.is-zooming .page-loader__logo,
+.page-loader.is-zooming .page-loader__cap {
+  display: none;
+}
+.page-loader__reveal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+.page-loader.is-zooming .page-loader__reveal {
+  opacity: 1;
+}
+/* The window starts at roughly logo size and grows about the viewBox centre
+   (where the B is translated to), so it expands from screen centre. */
+.bj-reveal-grow {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  transform: scale(0.34);
+}
+.page-loader.is-zooming .bj-reveal-grow {
+  animation: bjRevealGrow 0.72s cubic-bezier(0.55, 0, 0.35, 1) forwards;
+}
+@keyframes bjLoaderPop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes bjLoaderDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes bjLoaderCap {
+  to {
+    opacity: 0.42;
+  }
+}
+/* The B-shaped window grows from ~logo size until its solid body covers any
+   viewport, fully revealing the page through the logo. */
+@keyframes bjRevealGrow {
+  from {
+    transform: scale(0.34);
+  }
+  to {
+    transform: scale(18);
+  }
+}
+/* The champagne field holds opaque while the window grows, then a whisper of a
+   fade at the very end clears any sliver before the loader unmounts. */
+@keyframes bjLoaderOut {
+  0%,
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Print (sizing guide) */
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+}

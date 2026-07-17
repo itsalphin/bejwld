@@ -1,0 +1,19 @@
+# Input for the Cart Transform. We read each line's base unit cost (the base
+# variant price set in Shopify) and the hidden `_config` attribute written by the
+# storefront configurator. The final price = base + surcharges computed from
+# `_config` in run.js.
+query RunInput {
+  cart {
+    lines {
+      id
+      cost {
+        amountPerQuantity {
+          amount
+        }
+      }
+      config: attribute(key: "_config") {
+        value
+      }
+    }
+  }
+}

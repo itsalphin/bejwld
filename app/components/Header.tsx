@@ -1,231 +1,242 @@
-import {Suspense} from 'react';
-import {Await, NavLink, useAsyncValue} from 'react-router';
-import {
-  type CartViewPayload,
-  useAnalytics,
-  useOptimisticCart,
-} from '@shopify/hydrogen';
-import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
-import {useAside} from '~/components/Aside';
+import {useEffect, useRef, useState, type CSSProperties} from 'react';
+import {Link, useLocation} from 'react-router';
+import {RollText} from './RollText';
 
-interface HeaderProps {
-  header: HeaderQuery;
-  cart: Promise<CartApiQueryFragment | null>;
-  isLoggedIn: Promise<boolean>;
-  publicStoreDomain: string;
-}
+/** Big primary options. */
+const PRIMARY = [
+  {to: '/collections', label: 'Shop'},
+  {to: '/customize', label: 'Customize'},
+  {to: '/concierge', label: 'Concierge'},
+];
 
-type Viewport = 'desktop' | 'mobile';
+/** Account-related options inside the menu (Search + Bag live in the top bar). */
+const UTILITY = [
+  {to: '/account', label: 'Account'},
+  {to: '/wishlist', label: 'Saved'},
+];
 
-export function Header({
-  header,
-  isLoggedIn,
-  cart,
-  publicStoreDomain,
-}: HeaderProps) {
-  const {shop, menu} = header;
-  return (
-    <header className="header">
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <strong>{shop.name}</strong>
-      </NavLink>
-      <HeaderMenu
-        menu={menu}
-        viewport="desktop"
-        primaryDomainUrl={header.shop.primaryDomain.url}
-        publicStoreDomain={publicStoreDomain}
-      />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
-    </header>
-  );
-}
+const EDITORIAL = [
+  {to: '/about', label: 'About'},
+  {to: '/care', label: 'Care & warranty'},
+  {to: '/certificate', label: 'The certificate'},
+  {to: '/contact', label: 'Contact'},
+  {to: '/policies', label: 'Policies'},
+];
 
-export function HeaderMenu({
-  menu,
-  primaryDomainUrl,
-  viewport,
-  publicStoreDomain,
-}: {
-  menu: HeaderProps['header']['menu'];
-  primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
-  viewport: Viewport;
-  publicStoreDomain: HeaderProps['publicStoreDomain'];
-}) {
-  const className = `header-menu-${viewport}`;
-  const {close} = useAside();
+export function Header({cartCount}: {cartCount: number}) {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
-  return (
-    <nav className={className} role="navigation">
-      {viewport === 'mobile' && (
-        <NavLink
-          end
-          onClick={close}
-          prefetch="intent"
-          style={activeLinkStyle}
-          to="/"
-        >
-          Home
-        </NavLink>
-      )}
-      {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
-        if (!item.url) return null;
+  // Close on navigation.
+  useEffect(() => setOpen(false), [location.pathname]);
 
-        // if the url is internal, we strip the domain
-        const url =
-          item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain) ||
-          item.url.includes(primaryDomainUrl)
-            ? new URL(item.url).pathname
-            : item.url;
-        return (
-          <NavLink
-            className="header-menu-item"
-            end
-            key={item.id}
-            onClick={close}
-            prefetch="intent"
-            style={activeLinkStyle}
-            to={url}
-          >
-            {item.title}
-          </NavLink>
-        );
-      })}
-    </nav>
-  );
-}
+  // Lock body scroll + Esc-to-close while the menu is open; restore focus after.
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    overlayRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKey);
+      toggleRef.current?.focus();
+    };
+  }, [open]);
 
-function HeaderCtas({
-  isLoggedIn,
-  cart,
-}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
-  return (
-    <nav className="header-ctas" role="navigation">
-      <HeaderMenuMobileToggle />
-      <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback="Sign in">
-          <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
-          </Await>
-        </Suspense>
-      </NavLink>
-      <SearchToggle />
-      <CartToggle cart={cart} />
-    </nav>
-  );
-}
+  const bagLabel = cartCount ? `Bag (${cartCount})` : 'Bag (0)';
 
-function HeaderMenuMobileToggle() {
-  const {open} = useAside();
-  return (
-    <button
-      className="header-menu-mobile-toggle reset"
-      onClick={() => open('mobile')}
-    >
-      <h3>☰</h3>
-    </button>
-  );
-}
+  // The wordmark is hidden on the home page (the hero carries it) — it appears
+  // on every other page, and whenever the menu is open.
+  const isHome = location.pathname === '/';
+  const showWordmark = open || !isHome;
 
-function SearchToggle() {
-  const {open} = useAside();
-  return (
-    <button className="reset" onClick={() => open('search')}>
-      Search
-    </button>
-  );
-}
-
-function CartBadge({count}: {count: number}) {
-  const {open} = useAside();
-  const {publish, shop, cart, prevCart} = useAnalytics();
+  // Stagger delays across the whole option list, in reading order.
+  let step = 0;
+  const delay = () => ({animationDelay: `${200 + step++ * 42}ms`});
 
   return (
-    <a
-      href="/cart"
-      onClick={(e) => {
-        e.preventDefault();
-        open('cart');
-        publish('cart_viewed', {
-          cart,
-          prevCart,
-          shop,
-          url: window.location.href || '',
-        } as CartViewPayload);
-      }}
-    >
-      Cart <span aria-label={`(items: ${count})`}>{count}</span>
-    </a>
+    <>
+      <header
+        className={`sticky top-0 z-50 transition-colors duration-500 ${
+          open ? 'bg-transparent text-alabaster' : 'bg-alabaster text-sable'
+        }`}
+        style={{animation: 'bjHeaderIn 0.9s 0.05s both'}}
+      >
+        <div className="relative mx-auto flex h-[84px] max-w-[1440px] items-center justify-between px-[clamp(20px,4vw,56px)]">
+          {/* Brand mark, centred in the bar on the home page (in line with the
+              controls). Other pages carry the BEJWLD wordmark on the left instead. */}
+          {isHome && !open ? (
+            <Link
+              to="/"
+              aria-label="bejwld home"
+              onClick={() => setOpen(false)}
+              className="logo-mark absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            >
+              <svg
+                width={30}
+                height={46}
+                viewBox="30 6 176 268"
+                fill="none"
+                strokeWidth={32}
+                strokeLinecap="butt"
+                strokeLinejoin="miter"
+                strokeMiterlimit={6}
+                aria-hidden="true"
+              >
+                {/* Base mark, always in champagne. */}
+                <g stroke="var(--champagne)">
+                  <path d="M90,252 H52 V28 H128 L182,80 V200 L128,252 H90 Z" />
+                  <path d="M58,184 L176,98" />
+                </g>
+                {/* Line that draws itself over the mark on hover. */}
+                <g className="logo-draw" stroke="var(--sable)">
+                  <path
+                    style={{'--len': 700} as CSSProperties}
+                    d="M90,252 H52 V28 H128 L182,80 V200 L128,252 H90 Z"
+                  />
+                  <path style={{'--len': 160} as CSSProperties} d="M58,184 L176,98" />
+                </g>
+              </svg>
+            </Link>
+          ) : null}
+          {showWordmark ? (
+            <Link
+              to="/"
+              aria-label="bejwld home"
+              onClick={() => setOpen(false)}
+              className={`font-display text-[19px] tracking-[0.22em] transition-colors duration-500 sm:text-[28px] sm:tracking-[0.34em] ${
+                open ? 'text-alabaster' : 'text-sable'
+              }`}
+              style={{paddingLeft: '0.22em'}}
+            >
+              BEJWLD
+            </Link>
+          ) : (
+            <span aria-hidden />
+          )}
+
+          {/* Right controls — Search + Bag stay out (like store links), plus the toggle */}
+          <div className="flex items-center gap-5 md:gap-6">
+            <Link
+              to="/search"
+              className={`text-[11px] uppercase tracking-[0.22em] transition-colors ${
+                open ? 'text-alabaster hover:text-alabaster/70' : 'text-sable hover:text-gold-ink'
+              }`}
+            >
+              Search
+            </Link>
+            <Link
+              to="/cart"
+              className={`text-[11px] uppercase tracking-[0.22em] transition-colors ${
+                open ? 'text-alabaster hover:text-alabaster/70' : 'text-gold-ink hover:text-sable'
+              }`}
+            >
+              {bagLabel}
+            </Link>
+            <button
+              ref={toggleRef}
+              type="button"
+              className="menu-toggle"
+              aria-expanded={open}
+              aria-controls="site-menu"
+              aria-label={open ? 'Close menu' : 'Open menu'}
+              onClick={() => setOpen((v) => !v)}
+            >
+              <span className="l1" />
+              <span className="l2" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Full-screen menu */}
+      <div
+        id="site-menu"
+        ref={overlayRef}
+        tabIndex={-1}
+        aria-hidden={!open}
+        className={`menu-overlay outline-none ${open ? 'is-open' : ''}`}
+      >
+        <div className="menu-panel">
+          {/* Upper — numbered primary options + editorial note */}
+          <div className="menu-main">
+            <nav aria-label="Primary" className="menu-primary">
+              {PRIMARY.map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setOpen(false)}
+                  className="menu-link"
+                  style={delay()}
+                >
+                  <RollText text={l.label} />
+                </Link>
+              ))}
+            </nav>
+            <aside className="menu-aside">
+              <p className="menu-link quote" style={delay()}>
+                Sport, made precious.
+              </p>
+              <p className="menu-link desc" style={delay()}>
+                The fine jewelry house of the sporting life. Made to order in New York.
+              </p>
+              <p className="menu-link menu-eyebrow" style={delay()}>
+                Est. MMXXVI · New York
+              </p>
+            </aside>
+          </div>
+
+          {/* Lower — quiet columns */}
+          <div className="menu-foot">
+            <nav aria-label="Account & bag" className="menu-group menu-sub menu-sub--utility">
+              <p className="menu-link menu-eyebrow" style={delay()}>
+                Your account
+              </p>
+              {UTILITY.map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setOpen(false)}
+                  className="menu-link"
+                  style={delay()}
+                >
+                  <RollText text={l.label} />
+                </Link>
+              ))}
+            </nav>
+            <nav aria-label="The house" className="menu-group menu-sub menu-sub--house">
+              <p className="menu-link menu-eyebrow" style={delay()}>
+                The house
+              </p>
+              {EDITORIAL.map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setOpen(false)}
+                  className="menu-link"
+                  style={delay()}
+                >
+                  <RollText text={l.label} />
+                </Link>
+              ))}
+            </nav>
+            <div className="menu-group menu-contact">
+              <p className="menu-link menu-eyebrow" style={delay()}>
+                The concierge
+              </p>
+              <a className="menu-link" href="mailto:concierge@bejwld.com" style={delay()}>
+                <RollText text="concierge@bejwld.com" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
-}
-
-function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
-  return (
-    <Suspense fallback={<CartBadge count={0} />}>
-      <Await resolve={cart}>
-        <CartBanner />
-      </Await>
-    </Suspense>
-  );
-}
-
-function CartBanner() {
-  const originalCart = useAsyncValue() as CartApiQueryFragment | null;
-  const cart = useOptimisticCart(originalCart);
-  return <CartBadge count={cart?.totalQuantity ?? 0} />;
-}
-
-const FALLBACK_HEADER_MENU = {
-  id: 'gid://shopify/Menu/199655587896',
-  items: [
-    {
-      id: 'gid://shopify/MenuItem/461609500728',
-      resourceId: null,
-      tags: [],
-      title: 'Collections',
-      type: 'HTTP',
-      url: '/collections',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461609533496',
-      resourceId: null,
-      tags: [],
-      title: 'Blog',
-      type: 'HTTP',
-      url: '/blogs/journal',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461609566264',
-      resourceId: null,
-      tags: [],
-      title: 'Policies',
-      type: 'HTTP',
-      url: '/policies',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461609599032',
-      resourceId: 'gid://shopify/Page/92591030328',
-      tags: [],
-      title: 'About',
-      type: 'PAGE',
-      url: '/pages/about',
-      items: [],
-    },
-  ],
-};
-
-function activeLinkStyle({
-  isActive,
-  isPending,
-}: {
-  isActive: boolean;
-  isPending: boolean;
-}) {
-  return {
-    fontWeight: isActive ? 'bold' : undefined,
-    color: isPending ? 'grey' : 'black',
-  };
 }

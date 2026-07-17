@@ -1,232 +1,256 @@
-import {redirect, useLoaderData} from 'react-router';
+import {Suspense, lazy, useState} from 'react';
+import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
 import {
-  getSelectedProductOptions,
-  Analytics,
-  useOptimisticVariant,
-  getProductOptions,
-  getAdjacentAndFirstAvailableVariants,
-  useSelectedOptionInUrlParam,
-} from '@shopify/hydrogen';
-import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
-import {ProductForm} from '~/components/ProductForm';
-import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+  getProduct,
+  getRelatedProducts,
+  getSports,
+  fromPrice,
+  formatUSD,
+} from '~/lib/catalog';
+import {REVIEWS, RATING, TRUST_ITEMS} from '~/lib/content';
+import {
+  productJsonLd,
+  breadcrumbJsonLd,
+  ogImageForProduct,
+  absolute,
+} from '~/lib/seo';
+import {PlaceholderArt} from '~/components/PlaceholderArt';
+import {ClientOnly} from '~/components/ClientOnly';
+import {AddToBag} from '~/components/AddToBag';
+import {SizingGuideLauncher} from '~/components/SizingGuide';
+import {PieceCard} from '~/components/PieceCard';
+import {Reveal} from '~/components/Reveal';
+import {useWishlist} from '~/components/WishlistProvider';
+
+const ProductViewer3D = lazy(() => import('~/components/ProductViewer3D'));
 
 export const meta: Route.MetaFunction = ({data}) => {
+  if (!data?.product) return [{title: 'Piece not found — bejwld'}];
+  const {product} = data;
+  const priceLabel = `${product.configurable ? 'From ' : ''}${formatUSD(data.priceFrom)}`;
+  const description = `${product.description} ${product.materials}. ${priceLabel}.`;
   return [
-    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+    {title: `${product.name} — bejwld`},
+    {name: 'description', content: description},
+    {tagName: 'link', rel: 'canonical', href: absolute(`/products/${product.handle}`)},
+    {property: 'og:type', content: 'product'},
+    {property: 'og:title', content: `${product.name} — bejwld`},
+    {property: 'og:description', content: description},
+    {property: 'og:image', content: ogImageForProduct(product.handle)},
+    {name: 'twitter:card', content: 'summary_large_image'},
+    {name: 'twitter:title', content: `${product.name} — bejwld`},
+    {name: 'twitter:image', content: ogImageForProduct(product.handle)},
+    {'script:ld+json': productJsonLd(product, {rating: RATING})},
     {
-      rel: 'canonical',
-      href: `/products/${data?.product.handle}`,
+      'script:ld+json': breadcrumbJsonLd([
+        {name: 'Home', path: '/'},
+        {name: data.sportLabel, path: `/collections/${product.sport}`},
+        {name: product.name, path: `/products/${product.handle}`},
+      ]),
     },
   ];
 };
 
-export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
-  const criticalData = await loadCriticalData(args);
-
-  return {...deferredData, ...criticalData};
-}
-
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
-async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
-  const {handle} = params;
-  const {storefront} = context;
-
-  if (!handle) {
-    throw new Error('Expected product handle to be defined');
+export async function loader({params}: Route.LoaderArgs) {
+  const product = await getProduct(params.handle!);
+  if (!product) {
+    throw new Response('Piece not found', {status: 404});
   }
-
-  const [{product}] = await Promise.all([
-    storefront.query(PRODUCT_QUERY, {
-      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
-    }),
-    // Add other queries here, so that they are loaded in parallel
+  const [related, sports] = await Promise.all([
+    getRelatedProducts(product, 2),
+    getSports(),
   ]);
+  const sportLabel = sports.find((s) => s.sport === product.sport)?.label ?? product.sport;
 
-  if (!product?.id) {
-    throw new Response(null, {status: 404});
-  }
-
-  // The API handle might be localized, so redirect to the localized handle
-  redirectIfHandleIsLocalized(request, {handle, data: product});
-
-  return {
-    product,
-  };
+  return {product, related, sportLabel, priceFrom: fromPrice(product)};
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
-function loadDeferredData({context, params}: Route.LoaderArgs) {
-  // Put any API calls that is not critical to be available on first page render
-  // For example: product reviews, product recommendations, social feeds.
+const VIEWS = ['Front', 'Detail', 'On body', '3D'] as const;
 
-  return {};
-}
-
-export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
-
-  // Optimistically selects a variant with given available variant information
-  const selectedVariant = useOptimisticVariant(
-    product.selectedOrFirstAvailableVariant,
-    getAdjacentAndFirstAvailableVariants(product),
-  );
-
-  // Sets the search param to the selected variant without navigation
-  // only when no search params are set in the url
-  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
-
-  // Get the product options array
-  const productOptions = getProductOptions({
-    ...product,
-    selectedOrFirstAvailableVariant: selectedVariant,
-  });
-
-  const {title, descriptionHtml} = product;
+function Gallery({initial}: {initial: string}) {
+  const [view, setView] = useState(0);
+  const is3D = view === 3;
 
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
+    <div className="lg:sticky lg:top-[92px]">
+      <div className="relative aspect-[4/5] w-full overflow-hidden border border-stone bg-bone">
+        {is3D ? (
+          <ClientOnly
+            fallback={
+              <div className="flex h-full items-center justify-center">
+                <span className="label">Loading the viewer…</span>
+              </div>
+            }
+          >
+            {() => (
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center">
+                    <span className="label">Loading the viewer…</span>
+                  </div>
+                }
+              >
+                <ProductViewer3D />
+              </Suspense>
+            )}
+          </ClientOnly>
+        ) : (
+          <PlaceholderArt
+            initial={initial}
+            ring={168}
+            note={`${VIEWS[view]} · photography to follow`}
+          />
+        )}
       </div>
-      <Analytics.ProductView
-        data={{
-          products: [
-            {
-              id: product.id,
-              title: product.title,
-              price: selectedVariant?.price.amount || '0',
-              vendor: product.vendor,
-              variantId: selectedVariant?.id || '',
-              variantTitle: selectedVariant?.title || '',
-              quantity: 1,
-            },
-          ],
-        }}
-      />
+
+      <div className="mt-4 flex gap-3" role="tablist" aria-label="Product views">
+        {VIEWS.map((label, i) => (
+          <button
+            key={label}
+            type="button"
+            role="tab"
+            aria-selected={view === i}
+            onClick={() => setView(i)}
+            className="flex-1 border py-2.5 text-[10px] uppercase tracking-[0.18em] transition-colors"
+            style={{
+              borderColor: view === i ? 'var(--champagne)' : 'var(--stone)',
+              opacity: view === i ? 1 : 0.6,
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
-const PRODUCT_VARIANT_FRAGMENT = `#graphql
-  fragment ProductVariant on ProductVariant {
-    availableForSale
-    compareAtPrice {
-      amount
-      currencyCode
-    }
-    id
-    image {
-      __typename
-      id
-      url
-      altText
-      width
-      height
-    }
-    price {
-      amount
-      currencyCode
-    }
-    product {
-      title
-      handle
-    }
-    selectedOptions {
-      name
-      value
-    }
-    sku
-    title
-    unitPrice {
-      amount
-      currencyCode
-    }
-  }
-` as const;
+export default function ProductPage() {
+  const {product, related, sportLabel, priceFrom} = useLoaderData<typeof loader>();
+  const wishlist = useWishlist();
+  const wished = wishlist.has(product.handle);
+  const priceLabel = `${product.configurable ? 'From ' : ''}${formatUSD(priceFrom)}`;
 
-const PRODUCT_FRAGMENT = `#graphql
-  fragment Product on Product {
-    id
-    title
-    vendor
-    handle
-    descriptionHtml
-    description
-    encodedVariantExistence
-    encodedVariantAvailability
-    options {
-      name
-      optionValues {
-        name
-        firstSelectableVariant {
-          ...ProductVariant
-        }
-        swatch {
-          color
-          image {
-            previewImage {
-              url
-            }
-          }
-        }
-      }
-    }
-    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
-      ...ProductVariant
-    }
-    adjacentVariants (selectedOptions: $selectedOptions) {
-      ...ProductVariant
-    }
-    seo {
-      description
-      title
-    }
-  }
-  ${PRODUCT_VARIANT_FRAGMENT}
-` as const;
+  return (
+    <div className="mx-auto max-w-[1320px] px-[clamp(20px,4vw,56px)] py-[clamp(32px,4vw,56px)]">
+      {/* Breadcrumb */}
+      <nav
+        aria-label="Breadcrumb"
+        className="mb-8 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-sable/60"
+      >
+        <Link to="/" className="hover:text-gold-ink">
+          Home
+        </Link>
+        <span aria-hidden>·</span>
+        <Link to={`/collections/${product.sport}`} className="capitalize hover:text-gold-ink">
+          {sportLabel}
+        </Link>
+        <span aria-hidden>·</span>
+        <span className="text-sable">{product.name}</span>
+      </nav>
 
-const PRODUCT_QUERY = `#graphql
-  query Product(
-    $country: CountryCode
-    $handle: String!
-    $language: LanguageCode
-    $selectedOptions: [SelectedOptionInput!]!
-  ) @inContext(country: $country, language: $language) {
-    product(handle: $handle) {
-      ...Product
-    }
-  }
-  ${PRODUCT_FRAGMENT}
-` as const;
+      <div className="grid gap-[clamp(32px,5vw,72px)] lg:grid-cols-2">
+        <Gallery initial={product.initial} />
+
+        {/* Details */}
+        <div className="max-w-[46ch]">
+          <p className="label">{product.type}</p>
+          <h1 className="mt-3 font-display text-[clamp(34px,4.4vw,56px)] font-medium leading-[1.08]">
+            {product.name}
+          </h1>
+          <p className="mt-4 font-display text-[24px] text-gold-ink">{priceLabel}</p>
+          <p className="mt-2 text-[13px] text-sable/70">{product.materials}</p>
+
+          <p className="mt-7 text-[15px] leading-[1.7] text-sable/85">{product.description}</p>
+
+          <div className="mt-9 flex flex-col gap-3">
+            {product.configurable ? (
+              <Link
+                to={`/customize/${product.handle}`}
+                className="w-full border border-laurel bg-laurel px-8 py-4 text-center text-[11px] uppercase tracking-[0.24em] text-alabaster transition-opacity hover:opacity-90"
+              >
+                Customize this piece
+              </Link>
+            ) : null}
+            <AddToBag product={product} variant={product.configurable ? 'ink' : 'solid'}>
+              Add to bag — {formatUSD(priceFrom)}
+            </AddToBag>
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={() => wishlist.toggle(product.handle)}
+                aria-pressed={wished}
+                className="text-[11px] uppercase tracking-[0.2em] text-gold-ink hover:text-sable"
+              >
+                {wished ? 'Saved ♥' : 'Save to wishlist ♡'}
+              </button>
+              <SizingGuideLauncher />
+            </div>
+          </div>
+
+          {/* Trust row */}
+          <dl className="mt-10 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-stone pt-7">
+            {TRUST_ITEMS.map((t) => (
+              <div key={t.h}>
+                <dt className="label mb-1">{t.h}</dt>
+                <dd className="text-[13px] text-sable/75">{t.p}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+
+      {/* Reviews */}
+      <section aria-labelledby="reviews" className="mt-[clamp(64px,9vw,120px)]">
+        <div className="flex items-baseline justify-between border-t border-stone pt-7">
+          <h2 id="reviews" className="font-display text-[clamp(24px,3vw,34px)] font-medium">
+            From the people who wear it
+          </h2>
+          <span className="label">
+            ★ {RATING.value} · {RATING.count} reviews
+          </span>
+        </div>
+        <div className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-6">
+          {REVIEWS.map((r, i) => (
+            <Reveal key={i} delay={i * 80} className="border border-stone p-7">
+              <div className="flex items-center gap-3">
+                <span className="text-champagne" aria-label={`${r.stars} out of 5`}>
+                  {'★'.repeat(r.stars)}
+                  <span className="text-stone">{'★'.repeat(5 - r.stars)}</span>
+                </span>
+                {/* Customer photo placeholder — the real feed drives AggregateRating */}
+                <span className="flex h-7 w-7 items-center justify-center rounded-full border border-stone bg-bone text-[10px] text-champagne">
+                  {r.who.charAt(0)}
+                </span>
+              </div>
+              <p className="mt-4 text-[14px] leading-[1.65] text-sable/85">{r.text}</p>
+              <p className="mt-4 label">{r.who}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Complete the set */}
+      {related.length ? (
+        <section className="mt-[clamp(56px,8vw,110px)]">
+          <div className="mb-8 flex items-baseline justify-between border-t border-stone pt-7">
+            <h2 className="font-display text-[clamp(24px,3vw,34px)] font-medium">
+              Complete the set
+            </h2>
+            <Link to={`/collections/${product.sport}`} className="label hover:text-sable">
+              All {sportLabel}
+            </Link>
+          </div>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-x-6 gap-y-11">
+            {related.map((piece, i) => (
+              <Reveal key={piece.handle} delay={i * 80}>
+                <PieceCard piece={piece} />
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </div>
+  );
+}
