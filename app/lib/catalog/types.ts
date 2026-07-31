@@ -30,8 +30,21 @@ export type Occasion = 'everyday' | 'gift' | 'victory' | 'bespoke';
 /** Metal COLOUR a piece is rendered in (distinct from the karat `Metal`). */
 export type MetalColour = 'yellow' | 'white';
 
-/** A camera view available for a piece; `cutout` is the transparent hero. */
-export type ProductView = 'cutout' | '3d' | 'front' | 'right' | 'top' | 'single';
+/**
+ * A view available for a piece. `cutout` is the transparent hero; `3d/front/
+ * right/top/single` are the render angles; `threequarter/profile/detail` are the
+ * AI-generated editorial angles (with their own backdrops).
+ */
+export type ProductView =
+  | 'cutout'
+  | '3d'
+  | 'front'
+  | 'right'
+  | 'top'
+  | 'single'
+  | 'threequarter'
+  | 'profile'
+  | 'detail';
 
 export interface Product {
   /** URL handle, unique. Maps to Storefront `product.handle`. */

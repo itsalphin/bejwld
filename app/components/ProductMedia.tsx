@@ -4,15 +4,20 @@ import {productImage, productSrcSet, COLOUR_LABEL} from '~/lib/catalog';
 import {PlaceholderArt} from './PlaceholderArt';
 
 /**
- * Brilliant-Earth-style product viewer:
- *  - metal toggle (yellow / white gold) swaps the whole image set
- *  - angle gallery with a thumbnail rail (cutout · 3d · front · right · top)
- *  - hover-to-zoom on the main image (desktop), tap-to-zoom on touch
- *  - a "360°" control that cross-fades through the angles — a 4-frame montage,
- *    not a true spin (that needs a turntable render)
- *
- * Falls back to the placeholder art for pieces without real imagery.
+ * Brilliant-Earth-style product viewer — a 6-image gallery per metal colour:
+ *  - 3 clean product views (cutout · 3d · front) on the alabaster ground
+ *  - 3 AI-generated editorial angles (threequarter · profile · detail), each on
+ *    its own on-brand backdrop, shown full-bleed
+ * plus a metal toggle (yellow / white gold), hover-zoom, and a 360° cross-fade
+ * of the clean views. Falls back to placeholder art for pieces without imagery.
  */
+
+// The three clean render views used in the gallery, in order.
+const CLEAN: ProductView[] = ['cutout', '3d', 'front'];
+// The three generated editorial angles (own backgrounds → shown full-bleed).
+const EDITORIAL: ProductView[] = ['threequarter', 'profile', 'detail'];
+const isEditorial = (v: ProductView) => EDITORIAL.includes(v);
+
 export function ProductMedia({product}: {product: Product}) {
   const dir = product.imageDir;
   const colours = product.colours ?? [];
@@ -24,19 +29,23 @@ export function ProductMedia({product}: {product: Product}) {
   const [zoom, setZoom] = useState(false);
   const activeRef = useRef<HTMLImageElement>(null);
 
-  // Angle views only (for the pseudo-360 cross-fade).
-  const angleIdx = views
+  // Gallery = up to 3 clean views that exist + the 3 editorial angles.
+  const clean = CLEAN.filter((v) => views.includes(v));
+  const gallery: ProductView[] = [...clean, ...EDITORIAL];
+
+  // The 360° cross-fade only cycles the clean views (no editorial backdrops).
+  const spinIdx = gallery
     .map((v, i) => ({v, i}))
-    .filter((x) => x.v !== 'cutout' && x.v !== 'single')
+    .filter((x) => !isEditorial(x.v))
     .map((x) => x.i);
 
   useEffect(() => {
-    if (!spin || angleIdx.length < 2) return;
-    let k = Math.max(0, angleIdx.indexOf(idx));
+    if (!spin || spinIdx.length < 2) return;
+    let k = Math.max(0, spinIdx.indexOf(idx));
     const t = setInterval(() => {
-      k = (k + 1) % angleIdx.length;
-      setIdx(angleIdx[k]);
-    }, 240);
+      k = (k + 1) % spinIdx.length;
+      setIdx(spinIdx[k]);
+    }, 260);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spin]);
@@ -66,15 +75,17 @@ export function ProductMedia({product}: {product: Product}) {
         onMouseLeave={() => setZoom(false)}
         onClick={() => setZoom((z) => !z)}
       >
-        {views.map((v, i) => (
+        {gallery.map((v, i) => (
           <img
             key={v}
             ref={i === idx ? activeRef : null}
-            className={`pm-layer ${i === idx ? 'is-active' : ''}`}
-            src={productImage(dir, colour, v as ProductView, 1600)}
-            srcSet={productSrcSet(dir, colour, v as ProductView)}
+            className={`pm-layer ${i === idx ? 'is-active' : ''} ${
+              isEditorial(v) ? 'pm-layer--fill' : ''
+            }`}
+            src={productImage(dir, colour, v, 1600)}
+            srcSet={productSrcSet(dir, colour, v)}
             sizes="(max-width: 900px) 92vw, 620px"
-            alt={`${product.name} — ${colour} gold, ${v} view`}
+            alt={`${product.name} — ${colour} gold, view ${i + 1}`}
             width={1600}
             height={1600}
             loading={i === 0 ? 'eager' : 'lazy'}
@@ -82,7 +93,7 @@ export function ProductMedia({product}: {product: Product}) {
           />
         ))}
 
-        {angleIdx.length >= 2 ? (
+        {spinIdx.length >= 2 ? (
           <button
             type="button"
             className={`pm-spin ${spin ? 'is-on' : ''}`}
@@ -98,23 +109,25 @@ export function ProductMedia({product}: {product: Product}) {
         ) : null}
       </div>
 
-      {/* Thumbnail rail */}
+      {/* Thumbnail grid — the 6 views */}
       <div className="pm-rail" role="tablist" aria-label="Views">
-        {views.map((v, i) => (
+        {gallery.map((v, i) => (
           <button
             key={v}
             type="button"
             role="tab"
             aria-selected={i === idx}
-            aria-label={`${v} view`}
-            className={`pm-thumb ${i === idx ? 'is-active' : ''}`}
+            aria-label={`View ${i + 1}`}
+            className={`pm-thumb ${i === idx ? 'is-active' : ''} ${
+              isEditorial(v) ? 'pm-thumb--fill' : ''
+            }`}
             onClick={() => {
               setSpin(false);
               setIdx(i);
             }}
           >
             <img
-              src={productImage(dir, colour, v as ProductView, 600)}
+              src={productImage(dir, colour, v, 600)}
               alt=""
               width={600}
               height={600}
@@ -134,7 +147,9 @@ export function ProductMedia({product}: {product: Product}) {
               type="button"
               className={`pm-metal ${c === colour ? 'is-active' : ''}`}
               aria-pressed={c === colour}
-              onClick={() => setColour(c)}
+              onClick={() => {
+                setColour(c);
+              }}
             >
               <span className={`pm-swatch pm-swatch--${c}`} aria-hidden />
               {COLOUR_LABEL[c]}
