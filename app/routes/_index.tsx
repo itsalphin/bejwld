@@ -1,6 +1,6 @@
 import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/_index';
-import {getSports, getProduct, fromPrice} from '~/lib/catalog';
+import {getSports, getProduct, fromPrice, productImage, productSrcSet} from '~/lib/catalog';
 import {CRAFT_ITEMS} from '~/lib/content';
 import {Button} from '~/components/Button';
 import {Reveal} from '~/components/Reveal';
@@ -20,7 +20,7 @@ export const meta: Route.MetaFunction = () => [
 
 export async function loader(_args: Route.LoaderArgs) {
   const sports = await getSports();
-  const hero = await getProduct('match-point-pendant');
+  const hero = await getProduct('match-point');
   return {
     sports,
     hero: hero ? {...hero, priceFrom: fromPrice(hero)} : null,
@@ -119,8 +119,20 @@ export default function Home() {
           aria-label="Signature piece"
           className="mx-auto grid max-w-[1440px] grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))] items-center gap-[clamp(28px,5vw,80px)] px-[clamp(20px,4vw,56px)] pb-[clamp(70px,9vw,120px)]"
         >
-          <Reveal className="relative aspect-[4/5]">
-            <PlaceholderArt initial={hero.initial} ring={150} note="Photography to follow" />
+          <Reveal className="relative aspect-[4/5] overflow-hidden bg-alabaster">
+            {hero.imageDir ? (
+              <img
+                className="h-full w-full object-contain p-[8%]"
+                src={productImage(hero.imageDir, hero.colours?.[0] ?? 'yellow', 'cutout', 1600)}
+                srcSet={productSrcSet(hero.imageDir, hero.colours?.[0] ?? 'yellow', 'cutout')}
+                sizes="(max-width: 900px) 90vw, 620px"
+                alt={hero.name}
+                width={1600}
+                height={1600}
+              />
+            ) : (
+              <PlaceholderArt initial={hero.initial} ring={150} note="Photography to follow" />
+            )}
           </Reveal>
           <Reveal>
             <p className="label">The signature</p>

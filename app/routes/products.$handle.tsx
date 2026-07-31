@@ -1,4 +1,3 @@
-import {Suspense, lazy, useState} from 'react';
 import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
 import {
@@ -15,15 +14,13 @@ import {
   ogImageForProduct,
   absolute,
 } from '~/lib/seo';
-import {PlaceholderArt} from '~/components/PlaceholderArt';
-import {ClientOnly} from '~/components/ClientOnly';
+import {ProductMedia} from '~/components/ProductMedia';
 import {AddToBag} from '~/components/AddToBag';
 import {SizingGuideLauncher} from '~/components/SizingGuide';
 import {PieceCard} from '~/components/PieceCard';
 import {Reveal} from '~/components/Reveal';
 import {useWishlist} from '~/components/WishlistProvider';
 
-const ProductViewer3D = lazy(() => import('~/components/ProductViewer3D'));
 
 export const meta: Route.MetaFunction = ({data}) => {
   if (!data?.product) return [{title: 'Piece not found — bejwld'}];
@@ -66,66 +63,6 @@ export async function loader({params}: Route.LoaderArgs) {
   return {product, related, sportLabel, priceFrom: fromPrice(product)};
 }
 
-const VIEWS = ['Front', 'Detail', 'On body', '3D'] as const;
-
-function Gallery({initial}: {initial: string}) {
-  const [view, setView] = useState(0);
-  const is3D = view === 3;
-
-  return (
-    <div className="lg:sticky lg:top-[92px]">
-      <div className="relative aspect-[4/5] w-full overflow-hidden border border-stone bg-bone">
-        {is3D ? (
-          <ClientOnly
-            fallback={
-              <div className="flex h-full items-center justify-center">
-                <span className="label">Loading the viewer…</span>
-              </div>
-            }
-          >
-            {() => (
-              <Suspense
-                fallback={
-                  <div className="flex h-full items-center justify-center">
-                    <span className="label">Loading the viewer…</span>
-                  </div>
-                }
-              >
-                <ProductViewer3D />
-              </Suspense>
-            )}
-          </ClientOnly>
-        ) : (
-          <PlaceholderArt
-            initial={initial}
-            ring={168}
-            note={`${VIEWS[view]} · photography to follow`}
-          />
-        )}
-      </div>
-
-      <div className="mt-4 flex gap-3" role="tablist" aria-label="Product views">
-        {VIEWS.map((label, i) => (
-          <button
-            key={label}
-            type="button"
-            role="tab"
-            aria-selected={view === i}
-            onClick={() => setView(i)}
-            className="flex-1 border py-2.5 text-[10px] uppercase tracking-[0.18em] transition-colors"
-            style={{
-              borderColor: view === i ? 'var(--champagne)' : 'var(--stone)',
-              opacity: view === i ? 1 : 0.6,
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function ProductPage() {
   const {product, related, sportLabel, priceFrom} = useLoaderData<typeof loader>();
   const wishlist = useWishlist();
@@ -151,7 +88,9 @@ export default function ProductPage() {
       </nav>
 
       <div className="grid gap-[clamp(32px,5vw,72px)] lg:grid-cols-2">
-        <Gallery initial={product.initial} />
+        <div className="lg:sticky lg:top-[92px] lg:self-start">
+          <ProductMedia product={product} />
+        </div>
 
         {/* Details */}
         <div className="max-w-[46ch]">
