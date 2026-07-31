@@ -27,6 +27,12 @@ export type Stone = 'none' | 'accent' | 'pave' | 'solitaire';
 /** Occasion metafield — a merchandising facet. */
 export type Occasion = 'everyday' | 'gift' | 'victory' | 'bespoke';
 
+/** Metal COLOUR a piece is rendered in (distinct from the karat `Metal`). */
+export type MetalColour = 'yellow' | 'white';
+
+/** A camera view available for a piece; `cutout` is the transparent hero. */
+export type ProductView = 'cutout' | '3d' | 'front' | 'right' | 'top' | 'single';
+
 export interface Product {
   /** URL handle, unique. Maps to Storefront `product.handle`. */
   handle: string;
@@ -65,6 +71,16 @@ export interface Product {
    * price is enforced server-side by the Cart Transform Function.
    */
   base?: number;
+  /**
+   * Real product imagery. `imageDir` is the folder under `/public/products/`;
+   * `colours` are the metal colours the piece renders in (display order);
+   * `views` are the camera angles available (`cutout` first = hero). Absent for
+   * pieces that still use the placeholder art (e.g. the tennis demo capsule).
+   * Storefront equivalent: `product.images` grouped by a `colour` variant option.
+   */
+  imageDir?: string;
+  colours?: MetalColour[];
+  views?: ProductView[];
 }
 
 /** The user's configurator selections, attached to a cart line as properties. */

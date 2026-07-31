@@ -8,8 +8,3 @@ node_modules
 .shopify
 .react-router
 .vercel
-.env.example
-build
-tsconfig.tsbuildinfo
-.DS_Store
-*.log

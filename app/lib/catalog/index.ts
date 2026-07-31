@@ -18,6 +18,7 @@ import type {Metal, Product, Sport, Stone, Tier} from './types';
 
 export * from './types';
 export * from './pricing';
+export * from './images';
 
 /** A product decorated with its computed "From" price for display. */
 export interface ProductCard extends Product {

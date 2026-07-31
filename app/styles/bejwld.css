@@ -255,6 +255,173 @@ body {
   }
 }
 
+/* ===========================================================================
+   ProductMedia — the Brilliant-Earth-style PDP viewer.
+   =========================================================================== */
+.pm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pm-stage {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--alabaster);
+  border: 1px solid var(--bone);
+  overflow: hidden;
+  cursor: zoom-in;
+  touch-action: pan-y;
+}
+.pm-stage.is-zoom {
+  cursor: zoom-out;
+}
+.pm-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 6%;
+  opacity: 0;
+  transition:
+    opacity 0.4s ease,
+    transform 0.5s cubic-bezier(0.2, 0.6, 0.2, 1);
+  pointer-events: none;
+  user-select: none;
+}
+.pm-layer.is-active {
+  opacity: 1;
+}
+.pm-stage.is-zoom .pm-layer.is-active {
+  transform: scale(2);
+  transition: transform 0.12s ease;
+}
+.pm-spin {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+  padding: 7px 12px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sable);
+  background: color-mix(in srgb, var(--alabaster) 82%, transparent);
+  border: 1px solid var(--stone);
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition:
+    color 0.3s ease,
+    background 0.3s ease,
+    border-color 0.3s ease;
+}
+.pm-spin:hover,
+.pm-spin.is-on {
+  color: var(--alabaster);
+  background: var(--laurel);
+  border-color: var(--laurel);
+}
+.pm-rail {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pm-thumb {
+  width: 62px;
+  height: 62px;
+  padding: 0;
+  background: var(--alabaster);
+  border: 1px solid var(--bone);
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+.pm-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8%;
+}
+.pm-thumb:hover {
+  border-color: var(--stone);
+}
+.pm-thumb.is-active {
+  border-color: var(--champagne);
+}
+.pm-metals {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pm-metal {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 16px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sable);
+  background: transparent;
+  border: 1px solid var(--stone);
+  cursor: pointer;
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+.pm-metal:hover {
+  border-color: var(--sable);
+}
+.pm-metal.is-active {
+  border-color: var(--champagne);
+  color: var(--gold-ink);
+}
+.pm-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--sable) 20%, transparent);
+}
+.pm-swatch--yellow {
+  background: linear-gradient(135deg, #e8c987, #b8975a);
+}
+.pm-swatch--white {
+  background: linear-gradient(135deg, #f4f4f2, #cbccce);
+}
+
+/* Product card image — cutout with a hover-swap to the 3/4 (3d) view. */
+.pc-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 9%;
+  transition:
+    opacity 0.5s ease,
+    transform 0.6s cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.pc-img--hover {
+  opacity: 0;
+}
+.group:hover .pc-img {
+  transform: scale(1.03);
+}
+.group:hover .pc-img--base {
+  opacity: 0;
+}
+.group:hover .pc-img--hover {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pm-layer {
+    transition: opacity 0.2s ease;
+  }
+  .pm-stage.is-zoom .pm-layer.is-active {
+    transform: none;
+  }
+}
+
 /* Wordmark: light drawn slowly across the metal. */
 .wordmark-shimmer {
   background: linear-gradient(
