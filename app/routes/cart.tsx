@@ -8,7 +8,6 @@ import {
   removeLine,
   clearCart,
 } from '~/lib/cart/mock-cart';
-import {getSession, commitHeaders} from '~/lib/session';
 import {getProduct, getCompleteTheSet, formatUSD, defaultConfig} from '~/lib/catalog';
 import type {PieceConfig} from '~/lib/catalog';
 import {PieceCard} from '~/components/PieceCard';
@@ -17,9 +16,8 @@ import {useToast} from '~/components/Toast';
 
 export const meta: Route.MetaFunction = () => [{title: 'The bag — bejwld'}];
 
-export async function loader({request}: Route.LoaderArgs) {
-  const session = await getSession(request);
-  const cart = getCart(session);
+export async function loader({context}: Route.LoaderArgs) {
+  const cart = getCart(context.session);
   const related = await getCompleteTheSet(cart.lines.map((l) => l.handle), 3);
   // Don't ship internal attributes (e.g. `_config`, read only by the pricing
   // Function) to the client.
@@ -33,22 +31,16 @@ export async function loader({request}: Route.LoaderArgs) {
   return {cart: clientCart, related};
 }
 
-export async function action({request}: Route.ActionArgs) {
-  const session = await getSession(request);
+export async function action({request, context}: Route.ActionArgs) {
+  const {session} = context;
   const form = await request.formData();
   const intent = String(form.get('intent') ?? '');
-
-  // Vercel owns the server here, so there's no worker to commit the session
-  // globally (the Hydrogen twin does that in server.ts) — each response carries
-  // its own Set-Cookie when the cart was written to.
-  const respond = async (payload: unknown, status?: number) =>
-    data(payload, {status, headers: await commitHeaders(session)});
 
   switch (intent) {
     case 'add': {
       const handle = String(form.get('handle') ?? '');
       const product = await getProduct(handle);
-      if (!product) return respond({ok: false, message: 'That piece is unavailable.'}, 404);
+      if (!product) return data({ok: false, message: 'That piece is unavailable.'}, {status: 404});
 
       let config: PieceConfig | undefined;
       const rawConfig = form.get('config');
@@ -64,31 +56,31 @@ export async function action({request}: Route.ActionArgs) {
       }
       const engraving = form.get('engraving') ? String(form.get('engraving')) : undefined;
       addLine(session, product, {config, engraving});
-      return respond({ok: true, message: `${product.name} is in your bag.`});
+      return data({ok: true, message: `${product.name} is in your bag.`});
     }
     case 'setqty': {
       const id = String(form.get('id') ?? '');
       const quantity = Number(form.get('quantity') ?? 1);
       setQuantity(session, id, quantity);
-      return respond({ok: true, message: 'Bag updated.'});
+      return data({ok: true, message: 'Bag updated.'});
     }
     case 'remove': {
       removeLine(session, String(form.get('id') ?? ''));
-      return respond({ok: true, message: 'Removed from your bag.'});
+      return data({ok: true, message: 'Removed from your bag.'});
     }
     case 'clear': {
       clearCart(session);
-      return respond({ok: true, message: 'Your bag is empty.'});
+      return data({ok: true, message: 'Your bag is empty.'});
     }
     case 'checkout': {
       // In production: read `cart.checkoutUrl` from the Storefront cart and
       // `throw redirect(checkoutUrl)` to Shopify's hosted checkout. No store
       // here, so we signal the hand-off and the UI explains it.
       const cart = getCart(session);
-      return respond({ok: true, handoff: true, itemCount: cart.totalQuantity});
+      return data({ok: true, handoff: true, itemCount: cart.totalQuantity});
     }
     default:
-      return respond({ok: false, message: 'Unknown action.'}, 400);
+      return data({ok: false, message: 'Unknown action.'}, {status: 400});
   }
 }
 
@@ -183,10 +175,21 @@ export default function CartRoute() {
               <div key={line.id} className="flex gap-5 py-7 first:pt-0">
                 <Link
                   to={`/products/${line.handle}`}
-                  className="flex h-[104px] w-[84px] shrink-0 items-center justify-center border border-stone bg-bone"
+                  className="flex h-[104px] w-[84px] shrink-0 items-center justify-center overflow-hidden border border-stone bg-alabaster"
                   aria-hidden
                 >
-                  <span className="font-display text-[34px] text-champagne">{line.initial}</span>
+                  {line.image ? (
+                    <img
+                      src={line.image}
+                      alt=""
+                      width={84}
+                      height={104}
+                      className="h-full w-full object-contain p-[10%]"
+                      draggable={false}
+                    />
+                  ) : (
+                    <span className="font-display text-[34px] text-champagne">{line.initial}</span>
+                  )}
                 </Link>
                 <div className="flex flex-1 flex-col">
                   <div className="flex items-start justify-between gap-4">

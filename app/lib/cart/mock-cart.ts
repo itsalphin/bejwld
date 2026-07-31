@@ -16,12 +16,13 @@
  * enforces the real price from those attributes server-side.
  */
 
-import type {AppSessionLike as HydrogenSession} from '~/lib/session';
+import type {HydrogenSession} from '@shopify/hydrogen';
 import {
   configToLineItemProperties,
   configToStructuredAttribute,
   computeConfiguredPrice,
   fromPrice,
+  productImage,
 } from '~/lib/catalog';
 import type {PieceConfig, Product} from '~/lib/catalog';
 
@@ -39,6 +40,8 @@ export interface MockCartLine {
   name: string;
   type: string;
   initial: string;
+  /** Cutout thumbnail URL (first metal colour), when the piece has imagery. */
+  image?: string;
   /** Unit price in whole USD. In production this is enforced by the Function. */
   unitPrice: number;
   quantity: number;
@@ -125,6 +128,9 @@ export function addLine(
       name: product.name,
       type: product.type,
       initial: product.initial,
+      image: product.imageDir
+        ? productImage(product.imageDir, product.colours?.[0] ?? 'yellow', 'cutout', 600)
+        : undefined,
       unitPrice,
       quantity: 1,
       configurable: !!product.configurable,

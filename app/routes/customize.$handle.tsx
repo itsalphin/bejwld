@@ -1,7 +1,7 @@
 import {useMemo, useState} from 'react';
 import {redirect, useLoaderData, Link} from 'react-router';
 import type {Route} from './+types/customize.$handle';
-import {getProduct} from '~/lib/catalog';
+import {getProduct, productImage, productSrcSet} from '~/lib/catalog';
 import {
   METAL_OPTIONS,
   TREATMENT_OPTIONS,
@@ -20,7 +20,7 @@ import {AddToBag} from '~/components/AddToBag';
 import {SizingGuideLauncher} from '~/components/SizingGuide';
 
 export const meta: Route.MetaFunction = ({data}) => [
-  {title: data?.product ? `Compose the ${data.product.name} — bejwld` : 'The atelier — bejwld'},
+  {title: data?.product ? `Compose ${data.product.name} — bejwld` : 'The atelier — bejwld'},
   {name: 'description', content: 'Compose your piece and see it priced as configured.'},
   {tagName: 'link', rel: 'canonical', href: `/customize/${data?.product?.handle ?? ''}`},
 ];
@@ -114,8 +114,21 @@ export default function Configurator() {
       <div className="grid gap-[clamp(32px,5vw,72px)] lg:grid-cols-2">
         {/* Live preview */}
         <div className="lg:sticky lg:top-[92px] lg:self-start">
-          <div className="relative aspect-[4/5] w-full overflow-hidden border border-stone">
-            <PlaceholderArt initial={product.initial} ring={168} />
+          <div className="relative aspect-[4/5] w-full overflow-hidden border border-stone bg-alabaster">
+            {product.imageDir ? (
+              <img
+                src={productImage(product.imageDir, product.colours?.[0] ?? 'yellow', 'cutout', 1600)}
+                srcSet={productSrcSet(product.imageDir, product.colours?.[0] ?? 'yellow', 'cutout')}
+                sizes="(max-width: 900px) 92vw, 560px"
+                alt={product.name}
+                className="absolute inset-0 h-full w-full object-contain p-[11%]"
+                width={1600}
+                height={1600}
+                draggable={false}
+              />
+            ) : (
+              <PlaceholderArt initial={product.initial} ring={168} />
+            )}
             {/* Live engraving preview */}
             <div className="pointer-events-none absolute inset-x-0 bottom-8 flex justify-center">
               <span
