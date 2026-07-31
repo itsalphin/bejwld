@@ -56,7 +56,7 @@ export default function Wishlist() {
       {!wishlist.ready ? (
         <div className="py-24" aria-hidden />
       ) : saved.length ? (
-        <div className="mt-10 grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-x-6 gap-y-11">
+        <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-11">
           {saved.map((piece, i) => (
             <Reveal key={piece.handle} delay={(i % 4) * 80}>
               <PieceCard piece={piece} />
