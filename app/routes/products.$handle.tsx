@@ -88,12 +88,12 @@ export default function ProductPage() {
       </nav>
 
       <div className="grid gap-[clamp(32px,5vw,72px)] lg:grid-cols-2">
-        <div className="lg:sticky lg:top-[92px] lg:self-start">
+        <div>
           <ProductMedia product={product} />
         </div>
 
         {/* Details */}
-        <div className="max-w-[46ch]">
+        <div className="max-w-[46ch] lg:sticky lg:top-[92px] lg:self-start">
           <p className="label">{product.type}</p>
           <h1 className="mt-3 font-display text-[clamp(34px,4.4vw,56px)] font-medium leading-[1.08]">
             {product.name}
