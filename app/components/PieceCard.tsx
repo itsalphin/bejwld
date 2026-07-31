@@ -1,5 +1,5 @@
 import {Link} from 'react-router';
-import type {ProductCard, ProductView} from '~/lib/catalog';
+import type {ProductCard} from '~/lib/catalog';
 import {productImage, productSrcSet} from '~/lib/catalog';
 import {PlaceholderArt} from './PlaceholderArt';
 import {useWishlist} from './WishlistProvider';
@@ -13,8 +13,10 @@ export function PieceCard({piece}: {piece: ProductCard}) {
   const wished = wishlist.has(piece.handle);
 
   const dir = piece.imageDir;
-  const colour = piece.colours?.[0] ?? 'yellow';
-  const hoverView: ProductView = piece.views?.includes('3d') ? '3d' : 'cutout';
+  const baseColour = piece.colours?.[0] ?? 'yellow';
+  // Hover previews the other metal (both cutouts are transparent, so it always
+  // blends with the page — no baked backgrounds).
+  const hoverColour = piece.colours?.[1];
 
   return (
     <div className="group relative flex flex-col gap-[14px]">
@@ -26,9 +28,9 @@ export function PieceCard({piece}: {piece: ProductCard}) {
         {dir ? (
           <>
             <img
-              className="pc-img pc-img--base"
-              src={productImage(dir, colour, 'cutout', 600)}
-              srcSet={productSrcSet(dir, colour, 'cutout')}
+              className={`pc-img ${hoverColour ? 'pc-img--base' : ''}`}
+              src={productImage(dir, baseColour, 'cutout', 600)}
+              srcSet={productSrcSet(dir, baseColour, 'cutout')}
               sizes="(max-width: 640px) 45vw, 300px"
               alt={piece.name}
               width={600}
@@ -36,18 +38,20 @@ export function PieceCard({piece}: {piece: ProductCard}) {
               loading="lazy"
               draggable={false}
             />
-            <img
-              className="pc-img pc-img--hover"
-              src={productImage(dir, colour, hoverView, 600)}
-              srcSet={productSrcSet(dir, colour, hoverView)}
-              sizes="(max-width: 640px) 45vw, 300px"
-              alt=""
-              aria-hidden
-              width={600}
-              height={600}
-              loading="lazy"
-              draggable={false}
-            />
+            {hoverColour ? (
+              <img
+                className="pc-img pc-img--hover"
+                src={productImage(dir, hoverColour, 'cutout', 600)}
+                srcSet={productSrcSet(dir, hoverColour, 'cutout')}
+                sizes="(max-width: 640px) 45vw, 300px"
+                alt=""
+                aria-hidden
+                width={600}
+                height={600}
+                loading="lazy"
+                draggable={false}
+              />
+            ) : null}
           </>
         ) : (
           <div className="h-full w-full transition-transform duration-[600ms] ease-[cubic-bezier(.2,.6,.2,1)] group-hover:scale-[1.012]">
