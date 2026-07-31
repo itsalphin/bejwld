@@ -175,10 +175,21 @@ export default function CartRoute() {
               <div key={line.id} className="flex gap-5 py-7 first:pt-0">
                 <Link
                   to={`/products/${line.handle}`}
-                  className="flex h-[104px] w-[84px] shrink-0 items-center justify-center border border-stone bg-bone"
+                  className="flex h-[104px] w-[84px] shrink-0 items-center justify-center overflow-hidden border border-stone bg-alabaster"
                   aria-hidden
                 >
-                  <span className="font-display text-[34px] text-champagne">{line.initial}</span>
+                  {line.image ? (
+                    <img
+                      src={line.image}
+                      alt=""
+                      width={84}
+                      height={104}
+                      className="h-full w-full object-contain p-[10%]"
+                      draggable={false}
+                    />
+                  ) : (
+                    <span className="font-display text-[34px] text-champagne">{line.initial}</span>
+                  )}
                 </Link>
                 <div className="flex flex-1 flex-col">
                   <div className="flex items-start justify-between gap-4">

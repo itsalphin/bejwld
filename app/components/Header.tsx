@@ -76,7 +76,7 @@ export function Header({cartCount}: {cartCount: number}) {
               to="/"
               aria-label="bejwld home"
               onClick={() => setOpen(false)}
-              className="logo-mark absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              className="logo-mark absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:block"
             >
               <svg
                 width={30}
@@ -113,6 +113,18 @@ export function Header({cartCount}: {cartCount: number}) {
               className={`font-display text-[19px] tracking-[0.22em] transition-colors duration-500 sm:text-[28px] sm:tracking-[0.34em] ${
                 open ? 'text-alabaster' : 'text-sable'
               }`}
+              style={{paddingLeft: '0.22em'}}
+            >
+              BEJWLD
+            </Link>
+          ) : isHome ? (
+            // Mobile home: the centred mark is hidden below sm, so carry the
+            // wordmark on the left here — it never collides with the controls.
+            <Link
+              to="/"
+              aria-label="bejwld home"
+              onClick={() => setOpen(false)}
+              className="font-display text-[19px] tracking-[0.22em] text-sable sm:hidden"
               style={{paddingLeft: '0.22em'}}
             >
               BEJWLD
