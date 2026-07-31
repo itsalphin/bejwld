@@ -7,10 +7,9 @@
     "*.ts",
     "*.tsx",
     "*.d.ts",
-    ".graphqlrc.ts",
     ".react-router/types/**/*"
   ],
-  "exclude": ["node_modules", "dist", "build", "packages/**/dist/**/*"],
+  "exclude": ["node_modules", "dist", "build"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
@@ -25,12 +24,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "types": [
-      "@shopify/oxygen-workers-types",
-      "react-router",
-      "@shopify/hydrogen/react-router-types",
-      "vite/client"
-    ],
+    "types": ["react-router", "vite/client", "node"],
     "paths": {
       "~/*": ["app/*"]
     },

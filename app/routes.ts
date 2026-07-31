@@ -1,9 +1,6 @@
 import {flatRoutes} from '@react-router/fs-routes';
 import {type RouteConfig} from '@react-router/dev/routes';
-import {hydrogenRoutes} from '@shopify/hydrogen';
 
-export default hydrogenRoutes([
-  ...(await flatRoutes()),
-  // Manual route definitions can be added to this array, in addition to or instead of using the `flatRoutes` file-based routing convention.
-  // See https://reactrouter.com/api/framework-conventions/routes.ts#routests
-]) satisfies RouteConfig;
+// Plain file-based routing — Hydrogen's `hydrogenRoutes()` wrapper (which layers
+// in Shopify-specific routes) isn't used in the Vercel demo.
+export default (await flatRoutes()) satisfies RouteConfig;

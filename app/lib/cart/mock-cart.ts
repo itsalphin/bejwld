@@ -16,7 +16,7 @@
  * enforces the real price from those attributes server-side.
  */
 
-import type {HydrogenSession} from '@shopify/hydrogen';
+import type {AppSessionLike as HydrogenSession} from '~/lib/session';
 import {
   configToLineItemProperties,
   configToStructuredAttribute,

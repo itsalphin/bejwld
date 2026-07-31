@@ -1,4 +1,4 @@
-import {useNonce} from '@shopify/hydrogen';
+import {getSession} from '~/lib/session';
 import {
   Outlet,
   useRouteError,
@@ -57,8 +57,10 @@ export function links() {
   ];
 }
 
-export async function loader({context}: Route.LoaderArgs) {
-  const {session} = context;
+export async function loader({request}: Route.LoaderArgs) {
+  // Read-only: the header count + auth flag. Nothing is written, so no cookie
+  // commit is needed here.
+  const session = await getSession(request);
   // Nav, home rail, and /collections are all generated from this list — the
   // set of sports the house currently sells, derived at runtime. Never hard-coded.
   const sports = await getSports();
@@ -73,27 +75,22 @@ export async function loader({context}: Route.LoaderArgs) {
 }
 
 export function Layout({children}: {children?: React.ReactNode}) {
-  const nonce = useNonce();
-
+  // No CSP nonce here — that came from Hydrogen's `createContentSecurityPolicy`,
+  // which is Oxygen-specific. The demo ships without the strict CSP.
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <meta name="theme-color" content="#FBF9F4" />
-        {/* The browser clears the nonce content attribute after applying CSP,
-            so React sees a server/client mismatch on these inline scripts —
-            benign, so suppress the hydration warning. */}
         {/* Site-wide structured data (Organization + WebSite). */}
         <script
           type="application/ld+json"
-          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{__html: JSON.stringify(organizationJsonLd())}}
         />
         <script
           type="application/ld+json"
-          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{__html: JSON.stringify(websiteJsonLd())}}
         />
@@ -105,8 +102,8 @@ export function Layout({children}: {children?: React.ReactNode}) {
           Skip to content
         </a>
         {children}
-        <ScrollRestoration nonce={nonce} />
-        <Scripts nonce={nonce} />
+        <ScrollRestoration />
+        <Scripts />
       </body>
     </html>
   );

@@ -13,7 +13,7 @@
  * the shape those APIs return.
  */
 
-import type {HydrogenSession} from '@shopify/hydrogen';
+import type {AppSessionLike as HydrogenSession} from '~/lib/session';
 
 const USER_KEY = 'bejwld_user';
 

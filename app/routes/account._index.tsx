@@ -1,31 +1,38 @@
 import {Form, Link, useLoaderData, data} from 'react-router';
 import type {Route} from './+types/account._index';
 import {getUser, signIn, signOut} from '~/lib/account/mock-account';
+import {getSession, commitHeaders} from '~/lib/session';
 
 export const meta: Route.MetaFunction = () => [
   {title: 'Account — bejwld'},
   {name: 'robots', content: 'noindex'},
 ];
 
-export async function loader({context}: Route.LoaderArgs) {
-  return {user: getUser(context.session)};
+export async function loader({request}: Route.LoaderArgs) {
+  const session = await getSession(request);
+  return {user: getUser(session)};
 }
 
-export async function action({request, context}: Route.ActionArgs) {
+export async function action({request}: Route.ActionArgs) {
+  const session = await getSession(request);
   const form = await request.formData();
   const intent = String(form.get('intent') ?? '');
 
+  // Each response carries its own Set-Cookie — see the note in routes/cart.tsx.
+  const respond = async (payload: unknown, status?: number) =>
+    data(payload, {status, headers: await commitHeaders(session)});
+
   if (intent === 'signout') {
-    signOut(context.session);
-    return data({ok: true});
+    signOut(session);
+    return respond({ok: true});
   }
 
   const email = String(form.get('email') ?? '').trim();
   if (!email) {
-    return data({ok: false, error: 'Enter the email on your account.'}, {status: 400});
+    return respond({ok: false, error: 'Enter the email on your account.'}, 400);
   }
-  signIn(context.session, email);
-  return data({ok: true});
+  signIn(session, email);
+  return respond({ok: true});
 }
 
 const field =
