@@ -22,7 +22,7 @@ export function PieceCard({piece}: {piece: ProductCard}) {
     <div className="group relative flex flex-col gap-[14px]">
       <Link
         to={`/products/${piece.handle}`}
-        className="pc-media relative block aspect-[4/5] overflow-hidden bg-alabaster"
+        className="pc-media relative block aspect-square overflow-hidden bg-alabaster"
         aria-label={`${piece.name} — ${piece.type}, ${piece.priceLabel}`}
       >
         {dir ? (
