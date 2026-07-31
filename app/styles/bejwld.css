@@ -292,6 +292,11 @@ body {
 .pm-layer.is-active {
   opacity: 1;
 }
+/* Editorial angles carry their own backdrop — fill the stage edge-to-edge. */
+.pm-layer--fill {
+  object-fit: cover;
+  padding: 0;
+}
 .pm-stage.is-zoom .pm-layer.is-active {
   transform: scale(2);
   transition: transform 0.12s ease;
@@ -341,6 +346,10 @@ body {
   height: 100%;
   object-fit: contain;
   padding: 8%;
+}
+.pm-thumb--fill img {
+  object-fit: cover;
+  padding: 0;
 }
 .pm-thumb:hover {
   border-color: var(--stone);
