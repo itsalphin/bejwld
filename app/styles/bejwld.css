@@ -263,99 +263,29 @@ body {
   flex-direction: column;
   gap: 16px;
 }
-.pm-stage {
+/* Brilliant-Earth-style static gallery — all views in a 2-column grid. */
+.pm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.pm-cell {
   position: relative;
   aspect-ratio: 1 / 1;
   background: var(--alabaster);
   border: 1px solid var(--bone);
   overflow: hidden;
-  cursor: zoom-in;
-  touch-action: pan-y;
 }
-.pm-stage.is-zoom {
-  cursor: zoom-out;
-}
-.pm-layer {
-  position: absolute;
-  inset: 0;
+.pm-cell img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 6%;
-  opacity: 0;
-  transition:
-    opacity 0.4s ease,
-    transform 0.5s cubic-bezier(0.2, 0.6, 0.2, 1);
-  pointer-events: none;
-  user-select: none;
+  padding: 9%;
 }
-.pm-layer.is-active {
-  opacity: 1;
-}
-/* Editorial angles carry their own backdrop — fill the stage edge-to-edge. */
-.pm-layer--fill {
+/* Editorial angles carry their own backdrop — fill the cell edge-to-edge. */
+.pm-cell--fill img {
   object-fit: cover;
   padding: 0;
-}
-.pm-stage.is-zoom .pm-layer.is-active {
-  transform: scale(2);
-  transition: transform 0.12s ease;
-}
-.pm-spin {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  z-index: 2;
-  padding: 7px 12px;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--sable);
-  background: color-mix(in srgb, var(--alabaster) 82%, transparent);
-  border: 1px solid var(--stone);
-  border-radius: 999px;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition:
-    color 0.3s ease,
-    background 0.3s ease,
-    border-color 0.3s ease;
-}
-.pm-spin:hover,
-.pm-spin.is-on {
-  color: var(--alabaster);
-  background: var(--laurel);
-  border-color: var(--laurel);
-}
-.pm-rail {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.pm-thumb {
-  width: 62px;
-  height: 62px;
-  padding: 0;
-  background: var(--alabaster);
-  border: 1px solid var(--bone);
-  cursor: pointer;
-  transition: border-color 0.3s ease;
-}
-.pm-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 8%;
-}
-.pm-thumb--fill img {
-  object-fit: cover;
-  padding: 0;
-}
-.pm-thumb:hover {
-  border-color: var(--stone);
-}
-.pm-thumb.is-active {
-  border-color: var(--champagne);
 }
 .pm-metals {
   display: flex;
@@ -423,15 +353,6 @@ body {
 .group:hover .pc-img--hover {
   opacity: 1;
 }
-@media (prefers-reduced-motion: reduce) {
-  .pm-layer {
-    transition: opacity 0.2s ease;
-  }
-  .pm-stage.is-zoom .pm-layer.is-active {
-    transform: none;
-  }
-}
-
 /* Wordmark: light drawn slowly across the metal. */
 .wordmark-shimmer {
   background: linear-gradient(
