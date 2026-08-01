@@ -335,6 +335,9 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  /* Nudge up: the hanging bail leaves the ball low in the frame, so pull the
+     render toward the top to centre the piece optically in the card. */
+  object-position: center 42%;
   padding: 9%;
   transform: scale(1.2);
   transition:

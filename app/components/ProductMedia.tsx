@@ -13,8 +13,9 @@ import {PlaceholderArt} from './PlaceholderArt';
  * Falls back to placeholder art for pieces without imagery.
  */
 
-// The three clean render views used in the gallery, in order.
-const CLEAN: ProductView[] = ['cutout', '3d', 'front'];
+// The three clean render views used in the gallery, in order. `top` is a full,
+// well-composed angle; the flat `front` render was dropped in favour of it.
+const CLEAN: ProductView[] = ['cutout', '3d', 'top'];
 // The three generated editorial angles (own backgrounds → shown full-bleed).
 const EDITORIAL: ProductView[] = ['threequarter', 'profile', 'detail'];
 const isEditorial = (v: ProductView) => EDITORIAL.includes(v);
@@ -59,12 +60,13 @@ export function ProductMedia({product}: {product: Product}) {
     );
   }
 
-  // Gallery = 3 clean views that exist + the 3 editorial angles. The first two
-  // (cutout · 3d) are pinned; the remaining four are shuffled per-product.
+  // Gallery = 3 clean views that exist + the 3 editorial angles. Only the first
+  // (cutout — the hero that matches the card) is pinned; the other five are
+  // shuffled per-product so each piece opens on a different arrangement.
   const clean = CLEAN.filter((v) => views.includes(v));
   const all: ProductView[] = [...clean, ...EDITORIAL];
-  const pinned = all.slice(0, 2);
-  const rest = all.slice(2);
+  const pinned = all.slice(0, 1);
+  const rest = all.slice(1);
   const gallery: ProductView[] = [...pinned, ...seededShuffle(rest, product.handle)];
 
   return (
