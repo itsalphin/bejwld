@@ -133,8 +133,10 @@ export function Header({cartCount}: {cartCount: number}) {
             <span aria-hidden />
           )}
 
-          {/* Right controls — Search + Bag stay out (like store links), plus the toggle */}
-          <div className="flex items-center gap-5 md:gap-6">
+          {/* Right controls — Search + Bag stay out (like store links), plus the
+              toggle. `ml-auto` pins them right even when the left slot is empty
+              (home on desktop, where the brand mark is absolutely centred). */}
+          <div className="ml-auto flex items-center gap-5 md:gap-6">
             <Link
               to="/search"
               className={`text-[11px] uppercase tracking-[0.22em] transition-colors ${
