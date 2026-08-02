@@ -94,6 +94,12 @@ export interface Product {
   imageDir?: string;
   colours?: MetalColour[];
   views?: ProductView[];
+  /**
+   * Overrides the card + PDP hero image (default `cutout`). Used for the few
+   * near-identical SKUs whose clean vendor renders are shared with a sibling —
+   * pointing the hero at a unique editorial angle keeps them visually distinct.
+   */
+  cardView?: ProductView;
 }
 
 /** The user's configurator selections, attached to a cart line as properties. */

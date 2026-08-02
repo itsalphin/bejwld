@@ -187,6 +187,9 @@ const PICKLEBALL: Product[] = [
     imageDir: 'gse0379-a-e5597',
     colours: ['yellow', 'white'],
     views: ['cutout', '3d', 'front', 'right', 'top', 'single'],
+    // Clean renders are shared with Rally Studs (vendor reused them) — lead with
+    // this piece's unique editorial angle so the two read as distinct.
+    cardView: 'threequarter',
   },
   {
     handle: 'ace-drops',
@@ -204,6 +207,9 @@ const PICKLEBALL: Product[] = [
     imageDir: 'gse0379-b-e5586',
     colours: ['yellow', 'white'],
     views: ['cutout', '3d', 'front', 'right', 'top', 'single'],
+    // Clean renders are shared with Rally Drops (vendor reused them) — lead with
+    // this piece's unique editorial angle so the two read as distinct.
+    cardView: 'threequarter',
   },
   {
     handle: 'match-point-studs',

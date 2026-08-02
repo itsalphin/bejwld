@@ -60,14 +60,14 @@ export function ProductMedia({product}: {product: Product}) {
     );
   }
 
-  // Gallery = 3 clean views that exist + the 3 editorial angles. Only the first
-  // (cutout — the hero that matches the card) is pinned; the other five are
-  // shuffled per-product so each piece opens on a different arrangement.
+  // Gallery = 3 clean views that exist + the 3 editorial angles. The hero is
+  // pinned first (cutout by default, or a `cardView` override for shared-render
+  // SKUs); the rest are shuffled per-product so each opens on a fresh mix.
   const clean = CLEAN.filter((v) => views.includes(v));
   const all: ProductView[] = [...clean, ...EDITORIAL];
-  const pinned = all.slice(0, 1);
-  const rest = all.slice(1);
-  const gallery: ProductView[] = [...pinned, ...seededShuffle(rest, product.handle)];
+  const hero = product.cardView ?? all[0];
+  const rest = all.filter((v) => v !== hero);
+  const gallery: ProductView[] = [hero, ...seededShuffle(rest, product.handle)];
 
   return (
     <div className="pm">
