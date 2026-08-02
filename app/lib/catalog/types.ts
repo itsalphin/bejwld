@@ -44,7 +44,9 @@ export type ProductView =
   | 'single'
   | 'threequarter'
   | 'profile'
-  | 'detail';
+  | 'detail'
+  | 'champagne'
+  | 'marble';
 
 export interface Product {
   /** URL handle, unique. Maps to Storefront `product.handle`. */

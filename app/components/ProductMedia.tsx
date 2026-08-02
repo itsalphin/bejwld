@@ -13,11 +13,14 @@ import {PlaceholderArt} from './PlaceholderArt';
  * Falls back to placeholder art for pieces without imagery.
  */
 
-// The three clean render views used in the gallery, in order. `top` is a full,
-// well-composed angle; the flat `front` render was dropped in favour of it.
-const CLEAN: ProductView[] = ['cutout', '3d', 'top'];
-// The three generated editorial angles (own backgrounds → shown full-bleed).
-const EDITORIAL: ProductView[] = ['threequarter', 'profile', 'detail'];
+// One clean render (the transparent hero on the pale ground); everything else in
+// the grid is an editorial angle on a warm, in-palette backdrop that blends into
+// the site — so each PDP reads as 1 clean + 5 blended shots.
+const CLEAN: ProductView[] = ['cutout'];
+// Five generated editorial angles (own backdrops → shown full-bleed): the v2
+// blended set (linen/travertine/silk) plus the two batch-1 backdrops that blend
+// (champagne sweep, warm marble). The dark batch-1 `detail` was dropped.
+const EDITORIAL: ProductView[] = ['threequarter', 'profile', 'detail', 'champagne', 'marble'];
 const isEditorial = (v: ProductView) => EDITORIAL.includes(v);
 
 /**
