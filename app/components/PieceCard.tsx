@@ -17,6 +17,11 @@ export function PieceCard({piece}: {piece: ProductCard}) {
   // Hover previews the other metal (both cutouts are transparent, so it always
   // blends with the page — no baked backgrounds).
   const hoverColour = piece.colours?.[1];
+  // A few SKUs share their clean vendor render with a sibling; they set
+  // `cardView` to a unique editorial angle. Those are full-bleed (own backdrop),
+  // so we render them cover-filled with no metal hover-swap.
+  const cardView = piece.cardView ?? 'cutout';
+  const editorialCard = cardView !== 'cutout';
 
   return (
     <div className="group relative flex flex-col gap-[14px]">
@@ -25,7 +30,19 @@ export function PieceCard({piece}: {piece: ProductCard}) {
         className="pc-media relative block aspect-[4/5] overflow-hidden bg-alabaster"
         aria-label={`${piece.name} — ${piece.type}, ${piece.priceLabel}`}
       >
-        {dir ? (
+        {dir && editorialCard ? (
+          <img
+            className="pc-img pc-img--cover"
+            src={productImage(dir, baseColour, cardView, 600)}
+            srcSet={productSrcSet(dir, baseColour, cardView)}
+            sizes="(max-width: 640px) 45vw, 300px"
+            alt={piece.name}
+            width={600}
+            height={600}
+            loading="lazy"
+            draggable={false}
+          />
+        ) : dir ? (
           <>
             <img
               className={`pc-img ${hoverColour ? 'pc-img--base' : ''}`}
