@@ -44,7 +44,6 @@ export const meta: Route.MetaFunction = ({data}) => {
             href: productImage(product.imageDir, product.colours?.[0] ?? 'yellow', 'cutout', 600),
             imageSrcSet: productSrcSet(product.imageDir, product.colours?.[0] ?? 'yellow', 'cutout'),
             imageSizes: '(max-width: 900px) 46vw, 300px',
-            fetchPriority: 'high',
           },
         ]
       : []),

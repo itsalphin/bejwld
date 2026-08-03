@@ -104,7 +104,6 @@ export function ProductMedia({product}: {product: Product}) {
               width={1600}
               height={1600}
               loading={i === 0 ? 'eager' : 'lazy'}
-              fetchPriority={i === 0 ? 'high' : 'low'}
               decoding="async"
               draggable={false}
             />
