@@ -97,13 +97,15 @@ export function ProductMedia({product}: {product: Product}) {
         {gallery.map((v, i) => (
           <figure key={v} className={`pm-cell ${isEditorial(v) ? 'pm-cell--fill' : ''}`}>
             <img
-              src={productImage(dir, colour, v, 1600)}
+              src={productImage(dir, colour, v, 600)}
               srcSet={productSrcSet(dir, colour, v)}
               sizes="(max-width: 900px) 46vw, 300px"
               alt={`${product.name} — ${colour} gold, view ${i + 1}`}
               width={1600}
               height={1600}
-              loading={i < 2 ? 'eager' : 'lazy'}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              fetchPriority={i === 0 ? 'high' : 'low'}
+              decoding="async"
               draggable={false}
             />
           </figure>
