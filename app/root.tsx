@@ -38,6 +38,11 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 export function links() {
   return [
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
+    // Raster fallbacks for browsers/crawlers that ignore the SVG icon, plus the
+    // iOS home-screen icon. (favicon.ico is auto-served from /public.)
+    {rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32.png'},
+    {rel: 'icon', sizes: 'any', href: '/favicon.ico'},
+    {rel: 'apple-touch-icon', href: '/apple-touch-icon.png'},
     // Preload the display weights used above the fold (wordmark + tagline).
     {
       rel: 'preload',

@@ -60,7 +60,7 @@ export default function Home() {
           The fine jewelry house of the sporting life.
         </p>
         <p
-          className="mx-auto mt-[18px] max-w-[52ch] text-[14px] text-sable/70"
+          className="mx-auto mt-[18px] max-w-[40ch] text-balance text-[14px] text-sable/70"
           style={{animation: 'bjFadeUp .9s .65s both'}}
         >
           Heirloom gold and diamonds, in celebration of the games we love.
