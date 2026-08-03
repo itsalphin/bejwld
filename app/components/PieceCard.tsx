@@ -53,6 +53,7 @@ export function PieceCard({piece}: {piece: ProductCard}) {
               width={600}
               height={600}
               loading="lazy"
+              decoding="async"
               draggable={false}
             />
             {hoverColour ? (
@@ -66,6 +67,8 @@ export function PieceCard({piece}: {piece: ProductCard}) {
                 width={600}
                 height={600}
                 loading="lazy"
+                fetchPriority="low"
+                decoding="async"
                 draggable={false}
               />
             ) : null}

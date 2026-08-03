@@ -6,6 +6,8 @@ import {
   getSports,
   fromPrice,
   formatUSD,
+  productImage,
+  productSrcSet,
 } from '~/lib/catalog';
 import {REVIEWS, RATING, TRUST_ITEMS} from '~/lib/content';
 import {
@@ -31,6 +33,21 @@ export const meta: Route.MetaFunction = ({data}) => {
     {title: `${product.name} — bejwld`},
     {name: 'description', content: description},
     {tagName: 'link', rel: 'canonical', href: absolute(`/products/${product.handle}`)},
+    // Preload the LCP hero (the cutout, always the first grid image) so it starts
+    // downloading before the component mounts — responsive, matches the <img> exactly.
+    ...(product.imageDir
+      ? [
+          {
+            tagName: 'link',
+            rel: 'preload',
+            as: 'image',
+            href: productImage(product.imageDir, product.colours?.[0] ?? 'yellow', 'cutout', 600),
+            imageSrcSet: productSrcSet(product.imageDir, product.colours?.[0] ?? 'yellow', 'cutout'),
+            imageSizes: '(max-width: 900px) 46vw, 300px',
+            fetchPriority: 'high',
+          },
+        ]
+      : []),
     {property: 'og:type', content: 'product'},
     {property: 'og:title', content: `${product.name} — bejwld`},
     {property: 'og:description', content: description},
