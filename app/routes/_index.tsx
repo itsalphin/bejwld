@@ -48,6 +48,9 @@ export default function Home() {
             fontSize: 'clamp(42px,11vw,150px)',
             letterSpacing: '0.18em',
             paddingLeft: '0.18em',
+            // The J's descender sits below the caps; extend the gradient box down
+            // so background-clip:text still paints it (otherwise it renders cut).
+            paddingBottom: '0.16em',
             animation: 'bjFadeUp 1.1s .25s both, bjShimmer 9s 1.6s ease-in-out infinite',
           }}
         >
