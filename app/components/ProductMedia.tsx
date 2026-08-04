@@ -17,10 +17,10 @@ import {PlaceholderArt} from './PlaceholderArt';
 // the grid is an editorial angle on a warm, in-palette backdrop that blends into
 // the site — so each PDP reads as 1 clean + 5 blended shots.
 const CLEAN: ProductView[] = ['cutout'];
-// Five generated editorial angles (own backdrops → shown full-bleed): the v2
-// blended set (linen/travertine/silk) plus the two batch-1 backdrops that blend
-// (champagne sweep, warm marble). The dark batch-1 `detail` was dropped.
-const EDITORIAL: ProductView[] = ['threequarter', 'profile', 'detail', 'champagne', 'marble'];
+// Four generated editorial scenes (own backdrops → shown full-bleed): silk
+// drape (threequarter), warm linen table (profile), champagne satin macro
+// (champagne), and warm travertine ledge (marble).
+const EDITORIAL: ProductView[] = ['threequarter', 'profile', 'champagne', 'marble'];
 const isEditorial = (v: ProductView) => EDITORIAL.includes(v);
 
 /**
