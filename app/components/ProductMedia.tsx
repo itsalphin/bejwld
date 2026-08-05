@@ -23,6 +23,38 @@ const CLEAN: ProductView[] = ['cutout'];
 const EDITORIAL: ProductView[] = ['threequarter', 'profile', 'detail', 'champagne', 'marble'];
 const isEditorial = (v: ProductView) => EDITORIAL.includes(v);
 
+// Reviewer-selected grid cells to leave BLANK (image removed), per product and
+// per metal colour. Keyed by product handle → colour → the view-slots to blank.
+// Generated from the grid-position picks (positions map to slots via the same
+// seeded shuffle used below), so a blanked cell matches the numbered position.
+const BLANK: Record<string, Partial<Record<MetalColour, ProductView[]>>> = {
+  'first-serve': {yellow: ['profile', 'detail'], white: ['profile', 'champagne', 'marble']},
+  'the-dink': {yellow: ['champagne', 'profile'], white: ['detail', 'marble']},
+  'the-rally': {yellow: ['champagne', 'marble'], white: ['detail']},
+  'the-ace': {yellow: ['champagne'], white: ['champagne', 'detail']},
+  'match-point': {yellow: ['champagne', 'threequarter'], white: ['champagne', 'detail']},
+  'first-serve-studs': {yellow: ['marble', 'threequarter'], white: ['champagne']},
+  'first-serve-drops': {yellow: ['profile', 'marble'], white: ['champagne', 'profile', 'threequarter']},
+  'rally-studs': {yellow: ['marble', 'champagne'], white: ['profile', 'threequarter']},
+  'rally-drops': {yellow: ['marble', 'profile', 'champagne'], white: ['detail', 'profile', 'champagne']},
+  'ace-studs': {yellow: ['threequarter', 'champagne'], white: ['marble', 'champagne']},
+  'ace-drops': {yellow: ['champagne', 'threequarter', 'marble', 'profile'], white: ['champagne', 'threequarter', 'marble', 'profile']},
+  'match-point-studs': {yellow: ['marble', 'champagne'], white: ['marble', 'champagne']},
+  'match-point-drops': {yellow: ['marble', 'profile', 'threequarter', 'champagne'], white: ['marble', 'detail', 'champagne']},
+  'the-baseline': {yellow: ['profile', 'detail'], white: ['profile']},
+  'the-sideline': {yellow: ['detail', 'marble'], white: ['detail', 'marble']},
+  'the-kitchen': {yellow: ['detail'], white: ['marble']},
+  'center-court': {yellow: ['champagne'], white: ['marble']},
+  'center-court-enamel': {yellow: ['profile'], white: ['profile', 'marble']},
+  'the-kitchen-enamel': {yellow: ['detail'], white: ['marble']},
+  'championship-court': {yellow: ['champagne'], white: ['champagne']},
+  'championship-court-full': {yellow: ['marble'], white: ['marble', 'profile']},
+  'the-paddle': {yellow: ['profile', 'marble'], white: ['profile', 'threequarter', 'marble', 'detail']},
+  'the-paddle-brushed': {yellow: ['profile', 'marble'], white: ['profile', 'marble']},
+  'the-paddle-pave': {yellow: ['profile', 'marble'], white: ['profile', 'marble']},
+  'the-paddle-full-pave': {yellow: ['profile', 'marble'], white: ['threequarter', 'profile', 'marble']},
+};
+
 /**
  * A deterministic Fisher-Yates shuffle seeded from the product handle. Each
  * piece gets its own stable order, and — crucially — the server and the client
@@ -94,21 +126,34 @@ export function ProductMedia({product}: {product: Product}) {
 
       {/* Static 2-column grid — all views visible at once */}
       <div className="pm-grid">
-        {gallery.map((v, i) => (
-          <figure key={v} className={`pm-cell ${isEditorial(v) ? 'pm-cell--fill' : ''}`}>
-            <img
-              src={productImage(dir, colour, v, 600)}
-              srcSet={productSrcSet(dir, colour, v)}
-              sizes="(max-width: 900px) 46vw, 300px"
-              alt={`${product.name} — ${colour} gold, view ${i + 1}`}
-              width={1600}
-              height={1600}
-              loading={i === 0 ? 'eager' : 'lazy'}
-              decoding="async"
-              draggable={false}
-            />
-          </figure>
-        ))}
+        {gallery.map((v, i) => {
+          // Blank (image removed) if this view is on the current colour's list.
+          if (BLANK[product.handle]?.[colour]?.includes(v)) {
+            return (
+              <figure
+                key={v}
+                className="pm-cell pm-cell--blank"
+                style={{aspectRatio: '1 / 1'}}
+                aria-hidden
+              />
+            );
+          }
+          return (
+            <figure key={v} className={`pm-cell ${isEditorial(v) ? 'pm-cell--fill' : ''}`}>
+              <img
+                src={productImage(dir, colour, v, 600)}
+                srcSet={productSrcSet(dir, colour, v)}
+                sizes="(max-width: 900px) 46vw, 300px"
+                alt={`${product.name} — ${colour} gold, view ${i + 1}`}
+                width={1600}
+                height={1600}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                draggable={false}
+              />
+            </figure>
+          );
+        })}
       </div>
     </div>
   );
