@@ -59,7 +59,7 @@ export function Footer({sports}: {sports: SportSummary[]}) {
     <footer className="mt-[clamp(40px,6vw,80px)] border-t border-stone">
       <div className="mx-auto grid max-w-[1440px] grid-cols-[repeat(auto-fit,minmax(min(240px,100%),1fr))] gap-11 px-[clamp(20px,4vw,56px)] py-[clamp(56px,7vw,90px)]">
         <div>
-          <p className="font-display text-[19px] tracking-[0.3em]">BE<span className="wm-j">J</span>WLD</p>
+          <p className="font-display text-[19px] tracking-[0.3em]">BEJWLD</p>
           <p className="mt-4 max-w-[34ch] text-[13px] text-sable/70">
             The fine jewelry house of the sporting life. Made to order in New York.
           </p>

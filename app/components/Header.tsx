@@ -115,7 +115,7 @@ export function Header({cartCount}: {cartCount: number}) {
               }`}
               style={{paddingLeft: '0.22em'}}
             >
-              BE<span className="wm-j">J</span>WLD
+              BEJWLD
             </Link>
           ) : isHome ? (
             // Mobile home: the centred mark is hidden below sm, so carry the
@@ -127,7 +127,7 @@ export function Header({cartCount}: {cartCount: number}) {
               className="font-display text-[19px] tracking-[0.22em] text-sable sm:hidden"
               style={{paddingLeft: '0.22em'}}
             >
-              BE<span className="wm-j">J</span>WLD
+              BEJWLD
             </Link>
           ) : (
             <span aria-hidden />

@@ -382,16 +382,6 @@ body {
   animation: bjShimmer 9s 1.6s ease-in-out infinite;
 }
 
-/* The Playfair capital J descends below the baseline, so in the all-caps
-   BEJWLD wordmark it hangs lower than the other letters. Lift it so all six
-   sit on one baseline. `vertical-align` keeps the J inline text — so the
-   letter-spacing and the shimmer's background-clip:text still apply to it
-   (a positioned/inline-block span would drop out of the text clip). The
-   offset is in em, so it scales at every wordmark size. */
-.wm-j {
-  vertical-align: 0.055em;
-}
-
 /* Scroll reveals: set by JS (see useReveal). Start hidden only when JS + motion
    are available, so no-JS and reduced-motion users see content immediately. */
 [data-reveal] {
