@@ -54,7 +54,7 @@ export default function Home() {
             animation: 'bjFadeUp 1.1s .25s both, bjShimmer 9s 1.6s ease-in-out infinite',
           }}
         >
-          BEJWLD
+          BE<span className="wm-j">J</span>WLD
         </h1>
         <p
           className="mx-auto mt-[34px] max-w-[34ch] font-display text-[clamp(19px,2.4vw,26px)] italic leading-[1.45] text-balance"
